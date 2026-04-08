@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 _MEASUREMENT_KEYS = {
     "cpu_usage", "mem_usage", "m_stanum", "total_clients",
     "system_up_time", "m_channel", "ap_cpu_usage", "ap_mem_usage",
-    "client_count",
+    "client_count", "tp_24g_up", "tp_24g_down", "tp_5g_up", "tp_5g_down",
 }
 
 
@@ -74,6 +74,10 @@ async def async_setup_entry(
             WACAPDirectSensor(coordinator, entry, ap, "ap_mem_usage", "Memory Usage", PERCENTAGE, "mdi:memory"),
             WACAPDirectSensor(coordinator, entry, ap, "ap_mem_total", "Memory Total", None, "mdi:memory"),
             WACAPDirectSensor(coordinator, entry, ap, "client_count", "Connected Clients", None, "mdi:account-multiple-outline"),
+            WACAPDirectSensor(coordinator, entry, ap, "tp_24g_up", "2.4G Upload", "bit/s", "mdi:upload"),
+            WACAPDirectSensor(coordinator, entry, ap, "tp_24g_down", "2.4G Download", "bit/s", "mdi:download"),
+            WACAPDirectSensor(coordinator, entry, ap, "tp_5g_up", "5G Upload", "bit/s", "mdi:upload"),
+            WACAPDirectSensor(coordinator, entry, ap, "tp_5g_down", "5G Download", "bit/s", "mdi:download"),
         ])
 
     async_add_entities(entities)
@@ -288,5 +292,14 @@ class WACAPDirectSensor(CoordinatorEntity, SensorEntity):
             self._attr_native_value = sysinfo.get("mem_total")
         elif self._key == "client_count":
             self._attr_native_value = len(clients)
+        elif self._key.startswith("tp_"):
+            throughput = ap_direct.get("throughput", {})
+            tp_map = {
+                "tp_24g_up": "2.4G_up",
+                "tp_24g_down": "2.4G_down",
+                "tp_5g_up": "5G_up",
+                "tp_5g_down": "5G_down",
+            }
+            self._attr_native_value = throughput.get(tp_map.get(self._key, ""), 0)
 
         self.async_write_ha_state()

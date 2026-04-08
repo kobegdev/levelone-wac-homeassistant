@@ -74,12 +74,14 @@ class LevelOneWACCoordinator(DataUpdateCoordinator):
                 api = self._get_ap_api(ip)
                 sysinfo = await api.get_sysinfo()
                 clients = await api.get_wireless_clients()
+                throughput = await api.get_throughput()
 
                 if sysinfo:
                     ap_direct_data[mac] = {
                         "available": True,
                         "sysinfo": sysinfo,
                         "clients": clients,
+                        "throughput": throughput,
                     }
                 else:
                     ap_direct_data[mac] = {"available": False}

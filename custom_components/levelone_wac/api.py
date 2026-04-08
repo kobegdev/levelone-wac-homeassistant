@@ -200,6 +200,40 @@ class LevelOneAPApi:
                     clients.append(sta)
         return clients
 
+    async def get_throughput(self) -> dict:
+        """Get WiFi throughput per radio (bits/s)."""
+        result = await self._post("wireless", "funname=7&action=1")
+        throughput = {"2.4G_up": 0, "2.4G_down": 0, "5G_up": 0, "5G_down": 0}
+        if not isinstance(result, dict) or "WiFi_Throughput" not in result:
+            return throughput
+        for entry in result["WiFi_Throughput"].get("Throughput", []):
+            name = entry.get("name", "")
+            data = entry.get("data", [])
+            if not name or not data:
+                continue
+            # Last non-empty value is the current throughput
+            last_val = 0
+            for v in reversed(data):
+                try:
+                    val = int(str(v).strip().strip('"'))
+                    if val > 0:
+                        last_val = val
+                        break
+                except (ValueError, TypeError):
+                    continue
+            radio_type = entry.get("radio_type", "")
+            if radio_type == "1":  # 5G
+                if "UP" in name:
+                    throughput["5G_up"] = last_val
+                elif "DOWN" in name:
+                    throughput["5G_down"] = last_val
+            elif radio_type == "2":  # 2.4G
+                if "UP" in name:
+                    throughput["2.4G_up"] = last_val
+                elif "DOWN" in name:
+                    throughput["2.4G_down"] = last_val
+        return throughput
+
     async def test_connection(self) -> bool:
         """Test if we can connect and authenticate to the AP."""
         if not await self.login():
