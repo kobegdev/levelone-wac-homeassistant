@@ -78,6 +78,7 @@ async def async_setup_entry(
             WACAPDirectSensor(coordinator, entry, ap, "tp_24g_down", "2.4G Download", "bit/s", "mdi:download"),
             WACAPDirectSensor(coordinator, entry, ap, "tp_5g_up", "5G Upload", "bit/s", "mdi:upload"),
             WACAPDirectSensor(coordinator, entry, ap, "tp_5g_down", "5G Download", "bit/s", "mdi:download"),
+            WACLogSensor(coordinator, entry, ap),
         ])
 
     async_add_entities(entities)
@@ -302,4 +303,39 @@ class WACAPDirectSensor(CoordinatorEntity, SensorEntity):
             }
             self._attr_native_value = throughput.get(tp_map.get(self._key, ""), 0)
 
+        self.async_write_ha_state()
+
+
+class WACLogSensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing the latest log entry from an AP."""
+
+    def __init__(self, coordinator, entry, ap):
+        super().__init__(coordinator)
+        self._mac = ap.get("m_dev_mac", "")
+        self._ap_name = ap.get("m_dev_name") or self._mac
+        self._attr_name = f"{self._ap_name} Log"
+        self._attr_unique_id = f"{entry.entry_id}_{self._mac}_log"
+        self._attr_icon = "mdi:text-box-outline"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}_{self._mac}")},
+            name=self._ap_name,
+            manufacturer="LevelOne",
+            model=ap.get("m_dev_modelname", "Unknown"),
+            sw_version=ap.get("m_sw_ver", ""),
+            via_device=(DOMAIN, f"{entry.entry_id}_controller"),
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        log_content = self.coordinator.log_manager.get_log_content(self._ap_name, days=1)
+        if log_content:
+            lines = [l for l in log_content.splitlines() if l and not l.startswith("===")]
+            self._attr_native_value = lines[-1][:255] if lines else "No logs"
+            self._attr_extra_state_attributes = {
+                "log_lines_today": len(lines),
+                "full_log": "\n".join(lines[-50:]) if lines else "",
+            }
+        else:
+            self._attr_native_value = "No logs"
+            self._attr_extra_state_attributes = {"log_lines_today": 0, "full_log": ""}
         self.async_write_ha_state()

@@ -6,8 +6,8 @@
         "description": "Enter the connection details for your LevelOne WAC controller.",
         "data": {
           "host": "Controller IP address",
-          "username": "Username",
-          "password": "Password",
+          "username": "Controller Username",
+          "password": "Controller Password",
           "scan_interval": "Scan interval (seconds)"
         }
       },
@@ -34,6 +34,9 @@
       "init": {
         "title": "LevelOne WAC Options",
         "data": {
+          "host": "Controller IP address",
+          "username": "Controller Username",
+          "password": "Controller Password",
           "scan_interval": "Scan interval (seconds)",
           "ap_username": "AP Username",
           "ap_password": "AP Password",

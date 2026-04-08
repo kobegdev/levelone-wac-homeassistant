@@ -114,6 +114,11 @@ class LevelOneWACOptionsFlow(OptionsFlow):
             )
             coordinator = self.hass.data.get(DOMAIN, {}).get(self._config_entry.entry_id)
             if coordinator:
+                # Update controller API credentials
+                coordinator.controller_api._username = user_input[CONF_USERNAME]
+                coordinator.controller_api._password = user_input[CONF_PASSWORD]
+                coordinator.controller_api._token = None
+                # Update AP credentials
                 coordinator.update_ap_credentials(
                     user_input[CONF_AP_USERNAME],
                     user_input[CONF_AP_PASSWORD],
@@ -129,6 +134,18 @@ class LevelOneWACOptionsFlow(OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_HOST,
+                        default=current.get(CONF_HOST, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=current.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_PASSWORD,
+                        default=current.get(CONF_PASSWORD, ""),
+                    ): str,
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=current.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
