@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "LevelOne WAC Controller",
+        "description": "Enter the connection details for your LevelOne WAC controller.",
+        "data": {
+          "host": "Controller IP address",
+          "username": "Username",
+          "password": "Password",
+          "scan_interval": "Scan interval (seconds)"
+        }
+      },
+      "ap_credentials": {
+        "title": "Access Point Credentials",
+        "description": "Enter the login credentials for the access points.",
+        "data": {
+          "ap_username": "AP Username",
+          "ap_password": "AP Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the controller",
+      "invalid_auth": "Invalid username or password"
+    },
+    "abort": {
+      "already_configured": "This controller is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LevelOne WAC Options",
+        "data": {
+          "scan_interval": "Scan interval (seconds)",
+          "ap_username": "AP Username",
+          "ap_password": "AP Password"
+        }
+      }
+    }
+  }
+}
