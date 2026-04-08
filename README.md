@@ -47,14 +47,16 @@ The Home Assistant instance needs network access to both the controller and the 
 
 If the APs are on a different VLAN/subnet, you need to ensure your Home Assistant instance can reach them. Options include:
 
-1. **VLAN tagging**: Add the AP VLAN as a tagged VLAN on the Home Assistant network port and create a VLAN interface:
-   ```bash
-   ha network vlan end0 <VLAN_ID> --ipv4-method static --ipv4-address <IP>/<PREFIX> --ipv6-method disabled
-   ```
+1. **VLAN tagging**: Add the AP VLAN as a tagged VLAN on the Home Assistant network port, then configure the VLAN interface via the HA web UI:
+   - **Settings > System > Network > VLAN interface** — set a static IP in the AP subnet
+   - Note: The `ha network vlan` CLI command can create the interface, but assigning the IP via CLI may not work reliably for all VLAN IDs (especially VLAN 1). Use the web UI instead.
+   - Important: Avoid IP conflicts — verify the chosen IP is not already in use on the AP network.
 
 2. **Second network interface**: USB Ethernet adapter or Wi-Fi connected to the AP network
 
 3. **Routing**: Configure proper routing between the networks (requires IP forwarding on the gateway)
+
+4. **SD card network config**: For HA OS, you can place NetworkManager connection files on the boot partition under `CONFIG/network/` (no file extension, Unix line endings) to configure VLAN interfaces persistently.
 
 ## Installation
 
