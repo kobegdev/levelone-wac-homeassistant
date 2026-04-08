@@ -1,5 +1,7 @@
 """Config flow for LevelOne WAC integration."""
 
+from datetime import timedelta
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
@@ -11,11 +13,14 @@ from .const import (
     CONF_AP_PASSWORD,
     CONF_AP_USERNAME,
     CONF_HOST,
+    CONF_LOG_RETENTION_DAYS,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    DEFAULT_LOG_RETENTION_DAYS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    MAX_LOG_RETENTION_DAYS,
 )
 
 
@@ -70,7 +75,7 @@ class LevelOneWACConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ap_credentials(self, user_input=None) -> FlowResult:
-        """Step 2: AP credentials."""
+        """Step 2: AP credentials and log settings."""
         if user_input is not None:
             data = {**self._controller_data, **user_input}
             await self.async_set_unique_id(data[CONF_HOST])
@@ -86,6 +91,9 @@ class LevelOneWACConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_AP_USERNAME, default="admin"): str,
                     vol.Required(CONF_AP_PASSWORD, default="admin"): str,
+                    vol.Optional(
+                        CONF_LOG_RETENTION_DAYS, default=DEFAULT_LOG_RETENTION_DAYS
+                    ): vol.All(int, vol.Range(min=1, max=MAX_LOG_RETENTION_DAYS)),
                 }
             ),
         )
@@ -100,21 +108,20 @@ class LevelOneWACOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage options."""
         if user_input is not None:
-            # Update config entry data with new values
             new_data = {**self._config_entry.data, **user_input}
             self.hass.config_entries.async_update_entry(
                 self._config_entry, data=new_data
             )
-            # Update coordinator credentials if changed
             coordinator = self.hass.data.get(DOMAIN, {}).get(self._config_entry.entry_id)
             if coordinator:
                 coordinator.update_ap_credentials(
                     user_input[CONF_AP_USERNAME],
                     user_input[CONF_AP_PASSWORD],
                 )
-                coordinator.update_interval = __import__("datetime").timedelta(
+                coordinator.update_interval = timedelta(
                     seconds=user_input[CONF_SCAN_INTERVAL]
                 )
+                coordinator.log_manager.retention_days = user_input[CONF_LOG_RETENTION_DAYS]
             return self.async_create_entry(title="", data={})
 
         current = self._config_entry.data
@@ -134,6 +141,10 @@ class LevelOneWACOptionsFlow(OptionsFlow):
                         CONF_AP_PASSWORD,
                         default=current.get(CONF_AP_PASSWORD, "admin"),
                     ): str,
+                    vol.Optional(
+                        CONF_LOG_RETENTION_DAYS,
+                        default=current.get(CONF_LOG_RETENTION_DAYS, DEFAULT_LOG_RETENTION_DAYS),
+                    ): vol.All(int, vol.Range(min=1, max=MAX_LOG_RETENTION_DAYS)),
                 }
             ),
         )

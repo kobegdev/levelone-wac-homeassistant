@@ -9,3 +9,6 @@ CONF_PASSWORD = "password"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_AP_USERNAME = "ap_username"
 CONF_AP_PASSWORD = "ap_password"
+CONF_LOG_RETENTION_DAYS = "log_retention_days"
+DEFAULT_LOG_RETENTION_DAYS = 7
+MAX_LOG_RETENTION_DAYS = 31

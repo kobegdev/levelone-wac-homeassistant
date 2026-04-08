@@ -10,9 +10,11 @@ from .const import (
     CONF_AP_PASSWORD,
     CONF_AP_USERNAME,
     CONF_HOST,
+    CONF_LOG_RETENTION_DAYS,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    DEFAULT_LOG_RETENTION_DAYS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -41,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_AP_USERNAME, "admin"),
         entry.data.get(CONF_AP_PASSWORD, "admin"),
         entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+        entry.data.get(CONF_LOG_RETENTION_DAYS, DEFAULT_LOG_RETENTION_DAYS),
     )
     await coordinator.async_config_entry_first_refresh()
 

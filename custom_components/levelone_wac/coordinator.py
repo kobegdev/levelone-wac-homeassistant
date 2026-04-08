@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import LevelOneAPApi, LevelOneWACApi
+from .log_manager import LogManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class LevelOneWACCoordinator(DataUpdateCoordinator):
         ap_username: str,
         ap_password: str,
         scan_interval: int,
+        log_retention_days: int = 7,
     ) -> None:
         super().__init__(
             hass,
@@ -32,6 +34,8 @@ class LevelOneWACCoordinator(DataUpdateCoordinator):
         self._ap_username = ap_username
         self._ap_password = ap_password
         self._ap_apis: dict[str, LevelOneAPApi] = {}
+        self.log_manager = LogManager(hass.config.config_dir, log_retention_days)
+        self._poll_count = 0
 
     def _get_ap_api(self, ip: str) -> LevelOneAPApi:
         """Get or create an API client for a specific AP."""
@@ -57,10 +61,18 @@ class LevelOneWACCoordinator(DataUpdateCoordinator):
             if system_info is None:
                 raise UpdateFailed("Failed to get controller system info")
 
+            # Collect logs every 10th poll (~5 min at 30s interval)
+            collect_logs = self._poll_count % 10 == 0
+            self._poll_count += 1
+
+            if collect_logs:
+                self.log_manager.rotate_logs()
+
             ap_direct_data = {}
             for ap in ap_list:
                 ip = ap.get("m_dev_ip", "")
                 mac = ap.get("m_dev_mac", "")
+                ap_name = ap.get("m_dev_name", "") or mac
                 if not ip or not mac:
                     continue
                 try:
@@ -85,6 +97,10 @@ class LevelOneWACCoordinator(DataUpdateCoordinator):
                     }
                 else:
                     ap_direct_data[mac] = {"available": False}
+
+                # Collect AP log
+                if collect_logs and status >= -1:
+                    await self.log_manager.collect_ap_log(api, ap_name)
 
             return {
                 "controller": system_info,

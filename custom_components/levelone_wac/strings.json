@@ -12,11 +12,12 @@
         }
       },
       "ap_credentials": {
-        "title": "Access Point Credentials",
-        "description": "Enter the login credentials for the access points.",
+        "title": "Access Point Settings",
+        "description": "Enter the login credentials for the access points and log settings.",
         "data": {
           "ap_username": "AP Username",
-          "ap_password": "AP Password"
+          "ap_password": "AP Password",
+          "log_retention_days": "Log retention (days)"
         }
       }
     },
@@ -35,7 +36,8 @@
         "data": {
           "scan_interval": "Scan interval (seconds)",
           "ap_username": "AP Username",
-          "ap_password": "AP Password"
+          "ap_password": "AP Password",
+          "log_retention_days": "Log retention (days)"
         }
       }
     }
